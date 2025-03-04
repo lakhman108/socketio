@@ -3,59 +3,75 @@
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Socket.IO chat</title>
-    <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
+  </head>
+  <style>
+    body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
       #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
       #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
       #input:focus { outline: none; }
       #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
-
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages > li { padding: 0.5rem 1rem; }
       #messages > li:nth-child(odd) { background: #efefef; }
-    </style>
-  </head>
+  </style>
   <body>
-
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
-    <button id="changecolor" name="change">change color</button>
   </body>
   <script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io({
-    auth : {
-        serverOffset:0
-    }
-  });
+  <script>
+    // Extract room name from URL path
+    const room = window.location.pathname.substring(1) || 'default';
 
-  const form = document.getElementById('form');
-  const input = document.getElementById('input');
-  const messages=document.getElementById('messages');
-  const color=document.getElementById('changecolor');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('chat message', input.value);
-      input.value = '';
-    }
-  });
+    // Initialize Socket.IO client with connection state recovery and room query
+    const socket = io({
+        auth: {
+            serverOffset: 0 // Track last received message ID
+        },
+        query: {
+            room: room
+        }
+    });
 
+    // Get DOM elements
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
 
-  socket.on('chat message',(msg,serverOffset) => {
-    console.log(msg);
-    const item=document.createElement('li');
-    item.textContent=msg;
-    messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
-    socket.auth.serverOffset=serverOffset;
-  })
+    // Handle message submission
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (input.value) {
+            // Emit message to server
+            socket.emit('chat message', input.value);
+            input.value = '';
+        }
+    });
 
-  color.addEventListener('click',(e)=>{
-   
- })
-</script>
+    // Handle incoming messages
+    socket.on('chat message', (msg, serverOffset) => {
+        // Create and append message element
+        const item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+
+        // Auto-scroll to latest message
+        window.scrollTo(0, document.body.scrollHeight);
+
+        // Update message offset for connection recovery
+        socket.auth.serverOffset = serverOffset;
+    });
+
+    // Connection status handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+    });
+  </script>
 </html>

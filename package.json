@@ -4,10 +4,13 @@
     "description": "my first socket.io app",
     "type": "module",
     "dependencies": {
+        "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@socket.io/cluster-adapter": "^0.2.2",
         "express": "^4.21.2",
+        "fluent-ffmpeg": "^2.1.3",
         "socket.io": "^4.8.1",
         "sqlite": "^5.1.1",
-        "sqlite3": "^5.1.7"
+        "sqlite3": "^5.1.7",
+        "ytdl-core": "^4.11.5"
     }
 }
